@@ -10,10 +10,9 @@ object Minio {
   val minioClient = MinioClient.builder
     .endpoint("http://localhost:9000")
     .credentials(
-      // generated at http://localhost:40965/access-keys/new-account
+      // generated at http://localhost:.../access-keys/new-account
       "J3ZPGJNYjja3z74T",
       "Gs82a3wW6APexLBT2cdQjXlmCwRa7mqk"
-      // "3vfMBGgVTAP3yXwwgzSOWlDiXSDqUEDR" // "npUFmHEvul3Lle19lOWITCFeLKr0KCDQ"
     )
     .build()
 
@@ -58,31 +57,14 @@ object Minio {
    * @param bucket bucket name
    * @param id     object it
    */
-  def get(bucketName: String, id: String): GetObjectResponse /* extends FilterInputStream */ = {
-    val stream: GetObjectResponse = getObject(
+  def get(bucketName: String, id: String): GetObjectResponse /* extends FilterInputStream */ = 
+    getObject(
       GetObjectArgs.builder
         .bucket(bucketName)
         .`object`(id)
         .build
     )
 
-    // get object as byte array
-    //val blob = IOUtils.toByteArray(stream)
-    //println(blob.length)
-
-    // get object stat
-    val stat = statObject(
-      StatObjectArgs.builder()
-        .bucket(bucketName)
-        .`object`(id)
-        .build()
-    )
-    println("size\t= " + stat.size())
-    println("versionId\t= " + stat.versionId())
-    println("bucket\t= " + stat.bucket())
-
-    stream
-  }
 
   /**
    * remove object from minio storage
@@ -99,8 +81,7 @@ object Minio {
         .build()
     )
 
-    // get size of the bucket
-    println("buckets count\t= " + listObjects(ListObjectsArgs.builder().bucket(bucketName).build()).asScala.size)
+    println("bucket size\t= " + listObjects(ListObjectsArgs.builder().bucket(bucketName).build()).asScala.size)
   }
 
 }

@@ -43,7 +43,6 @@ object Main extends IOApp {
       } getOrElse {
         println(s"Not in cache:\t$hash\t$url")
 
-        // https://sttp.softwaremill.com/en/stable/responses/body.html
         val response = basicRequest.response(asByteArray).get(uri"$url").send(backend)
         val result = response.body
         println("response.contentLength=" + response.contentLength)
@@ -81,7 +80,6 @@ object Main extends IOApp {
       .in("cache" / query[String]("url"))
       .out(inputStreamBody)
       .out(header(sttp.model.HeaderNames.ContentType)(Codec.listHead(Codec.string))) // dynamic content type
-      //.out(EndpointIO.Header("Content-Type", Codec.listHead(Codec.string), EndpointIO.Info.empty))
       .serverLogic(cacheDemo)
 
   /*
