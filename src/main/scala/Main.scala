@@ -52,8 +52,8 @@ object Main extends IOApp {
         val contentType = response.contentType getOrElse ApplicationOctetStream.toString
 
         result.fold(
-          msg => // error
-            TextPlainUtf8.toString -> new ByteArrayInputStream(msg.getBytes(UTF_8)),
+          error => 
+            TextPlainUtf8.toString -> new ByteArrayInputStream(error.getBytes(UTF_8)),
 
           blob => // success
             Future {
