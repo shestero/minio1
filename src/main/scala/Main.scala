@@ -2,7 +2,6 @@ import java.io.ByteArrayInputStream
 
 import scala.util.Try
 import cats.effect.*
-import cats.syntax.all.*
 import org.http4s.HttpRoutes
 import org.http4s.server.Router
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -35,13 +34,13 @@ object Main extends IOApp {
 
   val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
 
-  val logic: String => IO[Either[Unit, (InputStream, String)]] = url => {
+  val logic: String => IO[Either[Unit, (String,InputStream)]] = url => {
     val hash = sha3384(url)
-    IO.pure(Right[Unit, (InputStream,String)](
+    IO.pure(Right[Unit, (String,InputStream)](
       Try {
         val cached = Minio.get(bucketName, hash)
         println(s"Cached!\t$hash\t$url")
-        cached.asInstanceOf[InputStream] -> cached.headers().get("Content-Type")
+        cached.headers().get("Content-Type") -> cached.asInstanceOf[InputStream]
       } getOrElse {
         println(s"Not in cache:\t$hash\t$url")
 
@@ -54,7 +53,7 @@ object Main extends IOApp {
 
         result.fold(
           msg => // error
-            new ByteArrayInputStream(msg.getBytes(UTF_8)) -> TextPlainUtf8.toString,
+            TextPlainUtf8.toString -> new ByteArrayInputStream(msg.getBytes(UTF_8)),
 
           blob => // success
             Future {
@@ -62,7 +61,7 @@ object Main extends IOApp {
             }.failed.foreach { e =>
               println(s"Error saving to cache ($hash): ${e.getMessage}")
             }
-            new ByteArrayInputStream(blob) -> contentType
+            contentType -> new ByteArrayInputStream(blob)
         )
       }
     ))
@@ -80,8 +79,8 @@ object Main extends IOApp {
     endpoint.description("get from cached url")
       .get
       .in("cache" / query[String]("url"))
-      .out(inputStreamBody)
       .out(header(ContentType)(Codec.listHead(Codec.string))) // dynamic content type
+      .out(inputStreamBody)
       .serverLogic(logic)
 
   /*
