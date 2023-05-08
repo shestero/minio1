@@ -74,7 +74,6 @@ object Minio {
    * @param id     object it
    */
   def delete(bucketName: String, id: String): Unit = {
-    // remove object
     removeObject(
       RemoveObjectArgs.builder()
         .bucket(bucketName)
