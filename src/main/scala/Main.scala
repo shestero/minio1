@@ -10,6 +10,8 @@ import sttp.client3.*
 import sttp.tapir.*
 import sttp.tapir.files.*
 import sttp.tapir.server.http4s.Http4sServerInterpreter
+import sttp.model.MediaType.*
+import sttp.model.HeaderNames.ContentType
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -33,7 +35,7 @@ object Main extends IOApp {
 
   val backend: SttpBackend[Identity, Any] = HttpURLConnectionBackend()
 
-  val cacheDemo: String => IO[Either[Unit, (InputStream, String)]] = url => {
+  val logic: String => IO[Either[Unit, (InputStream, String)]] = url => {
     val hash = sha3384(url)
     IO.pure(Right[Unit, (InputStream,String)](
       Try {
@@ -48,11 +50,11 @@ object Main extends IOApp {
         println("response.contentLength=" + response.contentLength)
         println("response.contentType=" + response.contentType)
 
-        val contentType = response.contentType getOrElse sttp.model.MediaType.ApplicationOctetStream.toString
+        val contentType = response.contentType getOrElse ApplicationOctetStream.toString
 
         result.fold(
           msg => // error
-            new ByteArrayInputStream(msg.getBytes(UTF_8)) -> sttp.model.MediaType.TextPlainUtf8.toString,
+            new ByteArrayInputStream(msg.getBytes(UTF_8)) -> TextPlainUtf8.toString,
 
           blob => // success
             Future {
@@ -79,8 +81,8 @@ object Main extends IOApp {
       .get
       .in("cache" / query[String]("url"))
       .out(inputStreamBody)
-      .out(header(sttp.model.HeaderNames.ContentType)(Codec.listHead(Codec.string))) // dynamic content type
-      .serverLogic(cacheDemo)
+      .out(header(ContentType)(Codec.listHead(Codec.string))) // dynamic content type
+      .serverLogic(logic)
 
   /*
   // delete object
@@ -92,8 +94,7 @@ object Main extends IOApp {
 
   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
-  override def run(args: List[String]): IO[ExitCode] = {
-    // starting the server
+  override def run(args: List[String]): IO[ExitCode] =
     BlazeServerBuilder[IO]
       .withExecutionContext(ec)
       .bindHttp(9090, "0.0.0.0")
@@ -101,5 +102,4 @@ object Main extends IOApp {
       .resource
       .useForever
       .as(ExitCode.Success)
-  }
 }
