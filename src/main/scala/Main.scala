@@ -36,12 +36,12 @@ object Main extends IOApp {
 
   val logic: String => IO[Either[Unit, (String,InputStream)]] = url => {
     val hash = sha3384(url)
-    IO.pure(Right[Unit, (String,InputStream)](
+    IO.fromTry(
       Try {
         val cached = Minio.get(bucketName, hash)
         println(s"Cached!\t$hash\t$url")
         cached.headers().get("Content-Type") -> cached.asInstanceOf[InputStream]
-      } getOrElse {
+      } orElse Try {
         println(s"Not in cache:\t$hash\t$url")
 
         val response = basicRequest.response(asByteArray).get(uri"$url").send(backend)
@@ -64,7 +64,7 @@ object Main extends IOApp {
             contentType -> new ByteArrayInputStream(blob)
         )
       }
-    ))
+    ).map(Right(_))
   }
 
   val options: FilesOptions[IO] =
