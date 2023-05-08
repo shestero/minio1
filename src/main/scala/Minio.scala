@@ -39,7 +39,6 @@ object Minio {
       )
     }
 
-    // put object
     putObject(
       PutObjectArgs.builder
         .bucket(bucketName)
