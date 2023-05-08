@@ -52,7 +52,7 @@ object Main extends IOApp {
         val contentType = response.contentType getOrElse ApplicationOctetStream.toString
 
         result.fold(
-          error => 
+          error =>
             TextPlainUtf8.toString -> new ByteArrayInputStream(error.getBytes(UTF_8)),
 
           blob => // success

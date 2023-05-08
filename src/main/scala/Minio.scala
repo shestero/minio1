@@ -18,6 +18,8 @@ object Minio {
 
   import minioClient._
 
+  def bucketExists(bucketName: String): Boolean =
+    minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())
 
   /**
    * Put object into minio storage
@@ -29,8 +31,7 @@ object Minio {
   def put(bucketName: String, id: String, inputStream: InputStream, size: Long, contentType: String = "binary/octet-stream"): Unit = {
 
     // create bucket if not exists
-    val argExist = BucketExistsArgs.builder().bucket(bucketName).build()
-    if (!bucketExists(argExist)) {
+    if (!bucketExists(bucketName)) {
       makeBucket(
         MakeBucketArgs.builder()
           .bucket(bucketName)
